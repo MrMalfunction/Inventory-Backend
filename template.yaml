@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Inv-Back
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: Inventory-Managment
+    Description: INV Managment
+    Author: Amol Bohora
+    SpdxLicenseId: UNLICENSED
+    ReadmeUrl: README.md
+    Labels: [ 'Inventory', 'Management' ]
+    SemanticVersion: 0.0.9
+
+Globals:
+  Function:
+    Timeout: 3
+    MemorySize: 400
+
+Resources:
+
+  InventoryAPI:
+     Type: AWS::Serverless::Api
+     Description : Serverless Inventory API
+     Properties:
+       StageName: Prod
+       EndpointConfiguration : REGIONAL
+       Cors:
+         AllowOrigin : "'*'"
+
+  invLive:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: invLive/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Description: Fuction to see live Inventory
+      Policies:
+        AmazonDynamoDBFullAccess
+      Events:
+        invLive:
+          Type: Api
+          Properties:
+            Path: /invLive
+            Method: post
+            RestApiId:
+              Ref: InventoryAPI
+
+
+  dataView:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dataView/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Description: Genral Function for data viewing
+      Policies:
+        AmazonDynamoDBFullAccess
+      Events:
+        dataView:
+          Type: Api
+          Properties:
+            Path: /dataView
+            Method: post
+            RestApiId:
+              Ref: InventoryAPI
+
+
+  dataIn:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dataIn/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Description: General Function to get Data In
+      Policies:
+        AmazonDynamoDBFullAccess
+      Events:
+        dataIn:
+          Type: Api
+          Properties:
+            Path: /dataIn
+            Method: post
+            RestApiId:
+              Ref: InventoryAPI
+
+
+
+  authCheck:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: authCheck/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Description: Signup and Login Function
+      Policies:
+        AmazonDynamoDBFullAccess
+      Events:
+        authCheck:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /auth
+            Method: post
+            RestApiId:
+              Ref: InventoryAPI
+
+
+
