@@ -1,0 +1,10 @@
+{
+  "type" : "SignUp",
+  "shopid" : "Shop",
+  "registerFirst" : "false",
+  "username" : "Amol",
+  "password" : "Amol@1234",
+  "new_username" : "Amol1",
+  "new_password" : "1234",
+  "roles" : ["Data_in"]
+}

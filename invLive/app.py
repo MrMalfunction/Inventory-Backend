@@ -20,7 +20,7 @@ def lambda_handler(event, context):
     shopid = str(uuid.uuid5(uuid.NAMESPACE_OID, event['shopid']))
     ssn = dynamodb.Table('SSN_Data')
     cc = ssn.query(KeyConditionExpression=Key('shopid').eq(shopid) & Key('username').eq(username))
-    if cc['Count'] == 1:
+    if cc['Count'] == 1  and cc['Items'][0]['roles']['View_Live'] == 'true':
         inv = dynamodb.Table('Inv_Data')
         shopid = str(uuid.uuid5(uuid.NAMESPACE_OID, event['shopid']))
         if cc['Items'][0]['cookie'] == event['cookie']:

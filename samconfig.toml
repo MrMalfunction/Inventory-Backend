@@ -2,7 +2,7 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "Inventory"
+stack_name = "Inventory-Management"
 s3_bucket = "simple-inv"
 s3_prefix = "BackEnd"
 region = "ap-south-1"

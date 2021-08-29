@@ -12,7 +12,7 @@ Metadata:
     SpdxLicenseId: UNLICENSED
     ReadmeUrl: README.md
     Labels: [ 'Inventory', 'Management' ]
-    SemanticVersion: 0.0.9
+    SemanticVersion: 0.1.0
 
 Globals:
   Function:
@@ -22,13 +22,21 @@ Globals:
 Resources:
 
   InventoryAPI:
-     Type: AWS::Serverless::Api
-     Description : Serverless Inventory API
+     Type: AWS::Serverless::HttpApi
      Properties:
+       Description: Serverless Inventory API
        StageName: Prod
-       EndpointConfiguration : REGIONAL
-       Cors:
-         AllowOrigin : "'*'"
+       Domain:
+          DomainName: "inv.amolbohora.com"
+          CertificateArn: arn:aws:acm:ap-south-1:404907247506:certificate/f5cf49db-493e-495e-816b-eb57f4e49ad5
+       CorsConfiguration:
+          AllowHeaders:
+            - "Content-type"
+          AllowOrigins:
+            - "*"
+          AllowMethods:
+            - "POST"
+            - "OPTIONS"
 
   invLive:
     Type: AWS::Serverless::Function
@@ -41,12 +49,67 @@ Resources:
         AmazonDynamoDBFullAccess
       Events:
         invLive:
-          Type: Api
+          Type: HttpApi
           Properties:
             Path: /invLive
             Method: post
-            RestApiId:
+            ApiId:
               Ref: InventoryAPI
+
+  export:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 30
+      CodeUri: export/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Description: Fuction to export annual data
+      Policies:
+       - AmazonDynamoDBFullAccess
+       - arn:aws:iam::404907247506:policy/Annual-Export-S3-Lambda-Policy
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:
+            Topic: arn:aws:sns:ap-south-1:404907247506:Exporter
+
+  exporter:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: exportCaller/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Description: Fuction to get autocopmlete data
+      Policies:
+        - arn:aws:iam::404907247506:policy/Export-Sns-Caller
+      Events:
+        invLive:
+          Type: HttpApi
+          Properties:
+            Path: /export
+            Method: post
+            ApiId:
+              Ref: InventoryAPI
+
+  autocomplete:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: autocomplete/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Description: Fuction to get autocopmlete data
+      Policies:
+      - AmazonDynamoDBFullAccess
+      - arn:aws:iam::404907247506:policy/AutocompleteS3
+      Events:
+        invLive:
+          Type: HttpApi
+          Properties:
+            Path: /auto
+            Method: post
+            ApiId:
+              Ref: InventoryAPI
+
 
 
   dataView:
@@ -60,11 +123,11 @@ Resources:
         AmazonDynamoDBFullAccess
       Events:
         dataView:
-          Type: Api
+          Type: HttpApi
           Properties:
             Path: /dataView
             Method: post
-            RestApiId:
+            ApiId:
               Ref: InventoryAPI
 
 
@@ -79,11 +142,11 @@ Resources:
         AmazonDynamoDBFullAccess
       Events:
         dataIn:
-          Type: Api
+          Type: HttpApi
           Properties:
             Path: /dataIn
             Method: post
-            RestApiId:
+            ApiId:
               Ref: InventoryAPI
 
 
@@ -99,11 +162,11 @@ Resources:
         AmazonDynamoDBFullAccess
       Events:
         authCheck:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /auth
             Method: post
-            RestApiId:
+            ApiId:
               Ref: InventoryAPI
 
 
